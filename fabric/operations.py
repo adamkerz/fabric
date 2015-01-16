@@ -251,8 +251,22 @@ def prompt(text, key=None, default='', validate=None):
 
 
 @needs_host
+def chmod(remote_path=None,use_sudo=False,mode=None,user=None,group=None):
+    if mode:
+        cmd='chmod {:03o} {}'.format(mode,remote_path)
+        sudo(cmd) if use_sudo else run(cmd)
+    if user:
+        cmd='chown {} {}'.format(user,remote_path)
+        sudo(cmd) if use_sudo else run(cmd)
+    if group:
+        cmd='chgrp {} {}'.format(group,remote_path)
+        sudo(cmd) if use_sudo else run(cmd)
+
+
+@needs_host
 def put(local_path=None, remote_path=None, use_sudo=False,
-    mirror_local_mode=False, mode=None, use_glob=True, temp_dir=""):
+    mirror_local_mode=False, mode=None, user=None, group=None,
+    use_glob=True, temp_dir=""):
     """
     Upload one or more files to a remote host.
 
@@ -391,12 +405,16 @@ def put(local_path=None, remote_path=None, use_sudo=False,
         for lpath in names:
             try:
                 if local_is_path and os.path.isdir(lpath):
-                    p = ftp.put_dir(lpath, remote_path, use_sudo,
-                        mirror_local_mode, mode, temp_dir)
-                    remote_paths.extend(p)
+                    ps = ftp.put_dir(lpath, remote_path, use_sudo,
+                         mirror_local_mode, mode, temp_dir)
+                    for p in ps:
+                        chmod(p,use_sudo,None,user,group)
+                    remote_paths.extend(ps)
                 else:
                     p = ftp.put(lpath, remote_path, use_sudo, mirror_local_mode,
                         mode, local_is_path, temp_dir)
+                    chmod(p,use_sudo,None,user,group)
+
                     remote_paths.append(p)
             except Exception, e:
                 msg = "put() encountered an exception while uploading '%s'"
