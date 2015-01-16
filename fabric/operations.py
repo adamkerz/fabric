@@ -251,6 +251,13 @@ def prompt(text, key=None, default='', validate=None):
 
 
 @needs_host
+def mkdir(path=None,use_sudo=False,mode=None,user=None,group=None):
+    cmd='mkdir {}'.format(path)
+    sudo(cmd) if use_sudo else run(cmd)
+    chmod(path,use_sudo,mode,user,group)
+
+
+@needs_host
 def chmod(remote_path=None,use_sudo=False,mode=None,user=None,group=None):
     if mode:
         cmd='chmod {:03o} {}'.format(mode,remote_path)
